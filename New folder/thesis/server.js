@@ -50,8 +50,6 @@ app.get('/auth/google/callback',
   }
 );
 
-const path = require('path');
-
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -89,11 +87,20 @@ app.post('/record-attendance', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { user, pass, role } = req.body;
+    
     if (role === 'Chairperson') {
         if (user === "admin" && pass === "chair123") {
             return res.json({ success: true, redirect: '/dashboard' });
         } else {
             return res.json({ success: false, message: "Invalid Admin Credentials" });
+        }
+    } else {
+        // Teacher Logic: This allows "12345" to log in
+        if (user === "12345") {
+            // Optional: You can add a check against your MongoDB here later
+            return res.json({ success: true, redirect: '/scan?room=Room101' });
+        } else {
+            return res.json({ success: false, message: "Invalid Employee ID" });
         }
     }
 });
