@@ -24,10 +24,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new GoogleStrategy({
-    const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-    callbackURL: "https://squeegee-spray-drone.ngrok-free.dev/auth/google/callback"
-  },
+    clientID: "680760235537-896vi59h26gtnnqjsb89b5rr5se3eesb.apps.googleusercontent.com",
+    clientSecret: "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",
+callbackURL: "https://thesis-attendance.onrender.com/auth/google/callback"  },
+
   (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
   }
@@ -43,8 +43,6 @@ mongoose.connect(dbURI)
   .then(() => console.log("✅ Success: Connected to MongoDB Atlas Cloud!"))
   .catch(err => console.error("❌ Cloud Connection Error:", err));
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login-page' }),
   (req, res) => {
@@ -58,7 +56,7 @@ app.get('/', (req, res) => {
 
 app.get('/generateQR/:roomName', async (req, res) => {
     try {
-        const url = `https://squeegee-spray-drone.ngrok-free.dev/scan?room=${req.params.roomName}`;
+        const url = `https://thesis-attendance.onrender.com/scan?room=${req.params.roomName}`;
         const qrImage = await qrcode.toDataURL(url);
         res.send(`<img src="${qrImage}"/> <p>Scan this to check into ${req.params.roomName}</p>`);
     } catch (err) {
