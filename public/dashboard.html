@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chairperson Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .status-badge { padding: 5px 10px; border-radius: 4px; background: #28a745; color: white; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Faculty Real-Time Monitoring</h1>
+        <p>Logged in as: <strong>Chairperson</strong></p>
+        
+        <table>
+            <!-- Update the table header in dashboard.html -->
+<thead>
+    <tr>
+        <th>Employee ID</th>
+        <th>Room</th>
+        <th>Current Status</th>
+        <th>Last Updated</th>
+        <th>Location</th>
+    </tr>
+</thead>
+<tbody id="attendanceTable">
+    <!-- Data will appear here -->
+</tbody>
+
+<script>
+    function loadAttendance() {
+        fetch('/get-attendance')
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById('attendanceTable');
+                table.innerHTML = ""; 
+                data.forEach(record => {
+                    const row = `<tr>
+                        <td>${record.employeeId}</td>
+                        <td>${record.location}</td>
+                        <td><strong>${record.status}</strong></td> 
+                        <td>${new Date(record.timestamp).toLocaleTimeString()}</td>
+                        <td>
+                            <a href="https://www.google.com/maps?q=${record.gps.lat},${record.gps.lng}" target="_blank">
+                                📍 View Map
+                            </a>
+                        </td>
+                    </tr>`;
+                    table.innerHTML += row;
+                });
+            });
+    }
+
+    // This makes the dashboard refresh every 5 seconds automatically
+    setInterval(loadAttendance, 5000); 
+    loadAttendance();
+</script>
+</body>
+</html>

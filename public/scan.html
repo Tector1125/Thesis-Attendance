@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Faculty Check-in</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f9f9f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; width: 90%; max-width: 400px; }
+        select, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+    <h2>Faculty Status Update</h2>
+    
+    <label>Select Room:</label>
+    <select id="roomSelect">
+        <option value="101">101</option>
+        <option value="106">106</option>
+        <option value="202">202</option>
+        <option value="A-303">A-303</option>
+        <option value="A-304">A-304</option>
+        <option value="A-305">A-305</option>
+        <option value="CL1">CL1</option>
+        <option value="CL2">CL2</option>
+        <option value="CL3">CL3</option>
+        <option value="CL4">CL4</option>
+        <option value="ROOM 5">ROOM 5</option>
+        <option value="ROOM 6">ROOM 6</option>
+        <option value="ROOM 7">ROOM 7</option>
+        <option value="ROOM 8">ROOM 8</option>
+        <option value="ROOM 9">ROOM 9</option>
+        <option value="Faculty Room">Faculty Room</option>
+        <option value="Campus">Campus</option>
+        <option value="Out of Campus">Out of Campus</option>
+    </select>
+
+    <label>Current Status:</label>
+    <select id="status">
+        <option value="In Class">In Class</option>
+        <option value="In Break">In Break</option>
+        <option value="In Faculty">In Faculty</option>
+        <option value="In a Meeting">In a Meeting</option>
+        <option value="Out of Campus">Out of Campus</option>
+    </select>
+
+    <button onclick="getLocationAndSubmit()">Update Status</button>
+</div>
+
+<script>
+    async function getLocationAndSubmit() {
+    // A. Fetch the real name from the session first
+    const userRes = await fetch('/user-info');
+    const userData = await userRes.json();
+    const displayName = userData.name;
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const data = {
+                employeeId: displayName, // <-- This replaces the hardcoded "FAC-001"
+                location: document.getElementById('roomSelect').value,
+                status: document.getElementById('status').value,
+                gps: { lat: position.coords.latitude, lng: position.coords.longitude }
+            };
+            
+            fetch('/record-attendance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert("Attendance Recorded for: " + displayName);
+                window.location.href = "/dashboard";
+            });
+        });
+    }
+}
+</script>
+</body>
+</html>
