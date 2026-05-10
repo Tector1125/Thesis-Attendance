@@ -50,8 +50,10 @@ app.get('/auth/google/callback',
   }
 );
 
+const path = require('path');
+
 app.get('/', (req, res) => {
-    res.send('Attendance System Server is Running! 🚀');
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.get('/generateQR/:roomName', async (req, res) => {
@@ -131,6 +133,7 @@ app.post('/clear-attendance', async (req, res) => {
     }
 });
 
-server.listen(3000, () => {
-    console.log('🚀 Server is live at http://localhost:3000');
-});git add .
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server is live at port ${PORT}`);
+});
