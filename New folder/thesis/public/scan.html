@@ -8,75 +8,100 @@
         .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; width: 90%; max-width: 400px; }
         select, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #welcomeUser { margin-top: 15px; font-weight: bold; color: #555; }
     </style>
 </head>
 <body>
     <div class="card">
-    <h2>Faculty Status Update</h2>
-    
-    <label>Select Room:</label>
-    <select id="roomSelect">
-        <option value="101">101</option>
-        <option value="106">106</option>
-        <option value="202">202</option>
-        <option value="A-303">A-303</option>
-        <option value="A-304">A-304</option>
-        <option value="A-305">A-305</option>
-        <option value="CL1">CL1</option>
-        <option value="CL2">CL2</option>
-        <option value="CL3">CL3</option>
-        <option value="CL4">CL4</option>
-        <option value="ROOM 5">ROOM 5</option>
-        <option value="ROOM 6">ROOM 6</option>
-        <option value="ROOM 7">ROOM 7</option>
-        <option value="ROOM 8">ROOM 8</option>
-        <option value="ROOM 9">ROOM 9</option>
-        <option value="Faculty Room">Faculty Room</option>
-        <option value="Campus">Campus</option>
-        <option value="Out of Campus">Out of Campus</option>
-    </select>
+        <h2>Faculty Status Update</h2>
+        
+        <!-- Identity Display -->
+        <p id="welcomeUser">Identifying user...</p>
 
-    <label>Current Status:</label>
-    <select id="status">
-        <option value="In Class">In Class</option>
-        <option value="In Break">In Break</option>
-        <option value="In Faculty">In Faculty</option>
-        <option value="In a Meeting">In a Meeting</option>
-        <option value="Out of Campus">Out of Campus</option>
-    </select>
+        <label>Select Room:</label>
+        <select id="roomSelect">
+            <option value="101">101</option>
+            <option value="106">106</option>
+            <option value="202">202</option>
+            <option value="A-303">A-303</option>
+            <option value="A-304">A-304</option>
+            <option value="A-305">A-305</option>
+            <option value="CL1">CL1</option>
+            <option value="CL2">CL2</option>
+            <option value="CL3">CL3</option>
+            <option value="CL4">CL4</option>
+            <option value="ROOM 5">ROOM 5</option>
+            <option value="ROOM 6">ROOM 6</option>
+            <option value="ROOM 7">ROOM 7</option>
+            <option value="ROOM 8">ROOM 8</option>
+            <option value="ROOM 9">ROOM 9</option>
+            <option value="Faculty Room">Faculty Room</option>
+            <option value="Campus">Campus</option>
+            <option value="Out of Campus">Out of Campus</option>
+        </select>
 
-    <button onclick="getLocationAndSubmit()">Update Status</button>
-</div>
+        <label>Current Status:</label>
+        <select id="status">
+            <option value="In Class">In Class</option>
+            <option value="In Break">In Break</option>
+            <option value="In Faculty">In Faculty</option>
+            <option value="In a Meeting">In a Meeting</option>
+            <option value="Out of Campus">Out of Campus</option>
+        </select>
 
-<script>
+        <button onclick="getLocationAndSubmit()">Update Status</button>
+    </div>
+
+    <script>
+    let facultyName = "FAC-001"; // Default backup
+
+    // Fetch the name as soon as the page loads
+    window.onload = async () => {
+        try {
+            const res = await fetch('/user-info');
+            const data = await res.json();
+            if (data.name && data.name !== "Unknown Faculty") {
+                facultyName = data.name;
+                document.getElementById('welcomeUser').innerText = "Logged in as: " + facultyName;
+                document.getElementById('welcomeUser').style.color = "#28a745";
+            } else {
+                document.getElementById('welcomeUser').innerText = "Session Expired - Using Default ID";
+                document.getElementById('welcomeUser').style.color = "#dc3545";
+            }
+        } catch (err) {
+            console.error("Auth check failed", err);
+        }
+    };
+
     async function getLocationAndSubmit() {
-    // A. Fetch the real name from the session first
-    const userRes = await fetch('/user-info');
-    const userData = await userRes.json();
-    const displayName = userData.name;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const attendanceData = {
+                    employeeId: facultyName, // This uses the Google Name fetched on load
+                    location: document.getElementById('roomSelect').value,
+                    status: document.getElementById('status').value,
+                    gps: { lat: position.coords.latitude, lng: position.coords.longitude }
+                };
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const data = {
-                employeeId: displayName, // <-- This replaces the hardcoded "FAC-001"
-                location: document.getElementById('roomSelect').value,
-                status: document.getElementById('status').value,
-                gps: { lat: position.coords.latitude, lng: position.coords.longitude }
-            };
-            
-            fetch('/record-attendance', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            })
-            .then(res => res.text())
-            .then(msg => {
-                alert("Attendance Recorded for: " + displayName);
-                window.location.href = "/dashboard";
+                console.log("Sending to DB:", attendanceData);
+
+                const response = await fetch('/record-attendance', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(attendanceData)
+                });
+
+                if (response.ok) {
+                    alert("Status Updated for " + facultyName);
+                    window.location.href = "/dashboard";
+                } else {
+                    alert("Update failed. Check VS Code Terminal.");
+                }
+            }, (error) => {
+                alert("Location Error: Please turn on GPS.");
             });
-        });
+        }
     }
-}
 </script>
 </body>
 </html>

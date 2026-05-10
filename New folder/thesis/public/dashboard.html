@@ -9,28 +9,43 @@
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #007bff; color: white; }
         tr:nth-child(even) { background-color: #f2f2f2; }
-        .status-badge { padding: 5px 10px; border-radius: 4px; background: #28a745; color: white; font-size: 0.8em; }
+        
+        /* Style for the Clear Button */
+        .clear-btn { 
+            background: #dc3545; 
+            color: white; 
+            padding: 10px 15px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .clear-btn:hover { background: #a71d2a; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Faculty Real-Time Monitoring</h1>
-        <p>Logged in as: <strong>Chairperson</strong></p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <p>Logged in as: <strong>Chairperson</strong></p>
+            <button class="clear-btn" onclick="clearLogs()">Clear All Records</button>
+        </div>
         
         <table>
-            <!-- Update the table header in dashboard.html -->
-<thead>
-    <tr>
-        <th>Employee ID</th>
-        <th>Room</th>
-        <th>Current Status</th>
-        <th>Last Updated</th>
-        <th>Location</th>
-    </tr>
-</thead>
-<tbody id="attendanceTable">
-    <!-- Data will appear here -->
-</tbody>
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Room</th>
+                    <th>Current Status</th>
+                    <th>Last Updated</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTable">
+                </tbody>
+        </table>
+    </div>
 
 <script>
     function loadAttendance() {
@@ -56,7 +71,25 @@
             });
     }
 
-    // This makes the dashboard refresh every 5 seconds automatically
+    // Single unified function to clear logs
+    async function clearLogs() {
+        if (confirm("Are you sure you want to delete all real-time logs? This cannot be undone.")) {
+            try {
+                const response = await fetch('/clear-attendance', { method: 'POST' });
+                if (response.ok) {
+                    alert("Logs cleared successfully!");
+                    loadAttendance(); // Refresh table immediately
+                } else {
+                    alert("Failed to clear logs. Make sure you added the route to server.js.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                alert("An error occurred while clearing logs.");
+            }
+        }
+    }
+
+    // Refresh dashboard every 5 seconds
     setInterval(loadAttendance, 5000); 
     loadAttendance();
 </script>

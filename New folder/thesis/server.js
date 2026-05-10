@@ -26,7 +26,7 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
     clientID: "680760235537-896vi59h26gtnnqjsb89b5rr5se3eesb.apps.googleusercontent.com",
     clientSecret: "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",
-callbackURL: "https://thesis-attendance.onrender.com/auth/google/callback"  },
+    callbackURL: "https://thesis-attendance.onrender.com/auth/google/callback"  },
 
   (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
@@ -133,4 +133,4 @@ app.post('/clear-attendance', async (req, res) => {
 
 server.listen(3000, () => {
     console.log('🚀 Server is live at http://localhost:3000');
-});
+});git add .
