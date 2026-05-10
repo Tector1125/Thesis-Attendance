@@ -24,10 +24,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new GoogleStrategy({
-    clientID: "680760235537-896vi59h26gtnnqjsb89b5rr5se3eesb.apps.googleusercontent.com",
-    clientSecret: "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",
-    callbackURL: "https://thesis-attendance.onrender.com/auth/google/callback"  },
-
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "https://thesis-attendance.onrender.com/auth/google/callback"
+  },
   (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
   }
