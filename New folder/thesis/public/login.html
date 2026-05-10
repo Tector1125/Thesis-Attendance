@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Faculty Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+        .login-card { background: white; padding: 20px; border-radius: 8px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 300px; }
+        input { display: block; width: 80%; margin: 10px auto; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 90%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        
+        /* Google Button Styling */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            color: #757575;
+            border: 1px solid #ddd;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .google-btn img { width: 20px; margin-right: 10px; }
+        .or-divider { margin: 15px 0; color: #888; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>System Login</h2>
+        
+        <select id="role" onchange="toggleFields()" style="width: 90%; padding: 10px; margin-bottom: 10px;">
+            <option value="Teacher">I am a Faculty Member</option>
+            <option value="Chairperson">I am the Chairperson</option>
+        </select>
+
+        <!-- Manual Login Section -->
+        <div id="manual-login">
+            <input type="text" id="user" placeholder="Employee ID">
+            <input type="password" id="pass" placeholder="Password" style="display:none;">
+            <button onclick="doLogin()">Sign In with ID</button>
+        </div>
+
+        <!-- Google Login Section (Only for Faculty) -->
+        <div id="google-section">
+            <div class="or-divider">—— OR ——</div>
+            <a href="/auth/google" class="google-btn" style="padding: 10px; border-radius: 4px;">
+                <img src=(https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png) alt="Google logo">
+                Sign in with Google
+            </a>
+        </div>
+    </div>
+
+<script>
+    function toggleFields() {
+        const role = document.getElementById('role').value;
+        const passField = document.getElementById('pass');
+        const userField = document.getElementById('user');
+        const googleSection = document.getElementById('google-section');
+        
+        if (role === 'Chairperson') {
+            passField.style.display = 'block';
+            userField.placeholder = "Username";
+            googleSection.style.display = 'none'; // Hide Google for Admin
+        } else {
+            passField.style.display = 'none';
+            userField.placeholder = "Employee ID";
+            googleSection.style.display = 'block'; // Show Google for Faculty
+        }
+    }
+
+    function doLogin() {
+        const role = document.getElementById('role').value;
+        const user = document.getElementById('user').value;
+        const pass = document.getElementById('pass').value;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ role, user, pass })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = data.redirect;
+            } else {
+                alert(data.message || "Login Failed");
+            }
+        });
+    }
+</script>
+</body>
+</html>
