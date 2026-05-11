@@ -126,7 +126,7 @@ app.get('/user-info', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({ name: req.user.displayName });
     } else {
-        res.json({ name: "Unknown Faculty" });
+        res.json({ name: "Faculty Employee" });
     }
 });
 
