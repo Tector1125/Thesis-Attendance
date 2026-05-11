@@ -66,45 +66,49 @@
         if (role === 'Chairperson') {
             passField.style.display = 'block';
             userField.placeholder = "Username";
-            googleSection.style.display = 'none'; // Hide Google for Admin
+            googleSection.style.display = 'none'; 
         } else {
             passField.style.display = 'none';
             userField.placeholder = "Employee ID";
-            googleSection.style.display = 'block'; // Show Google for Faculty
+            googleSection.style.display = 'block'; 
         }
     }
 
     function doLogin() {
-    const role = document.getElementById('role').value;
-    const user = document.getElementById('user').value;
-    const pass = document.getElementById('pass').value;
+        const role = document.getElementById('role').value;
+        const user = document.getElementById('user').value;
+        const pass = document.getElementById('pass').value;
 
-    // LOCAL BYPASS: No server request needed
-    if (role === 'Teacher' && user === '12345') {
-        window.location.href = '/scan?room=Room101';
-        return;
-    } 
-    
-    if (role === 'Chairperson' && user === 'admin' && pass === 'chair123') {
-        window.location.href = '/dashboard';
-        return;
-    }
-
-    // Original logic as backup
-    fetch('/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ role, user, pass })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.success) {
-            window.location.href = data.redirect;
-        } else {
-            alert("Login Failed");
+        // 1. Emergency Bypass (Works even if server is down)
+        if (role === 'Teacher' && user === '12345') {
+            window.location.href = '/scan.html';
+            return;
+        } 
+        
+        if (role === 'Chairperson' && user === 'admin' && pass === 'chair123') {
+            window.location.href = '/dashboard.html';
+            return;
         }
-    });
-}
+
+        // 2. Standard Server Login
+        fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ role, user, pass })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = data.redirect;
+            } else {
+                alert("Login Failed");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Connection Error. Use the 12345 bypass.");
+        });
+    }
 </script>
 </body>
 </html>
