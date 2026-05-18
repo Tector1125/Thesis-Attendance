@@ -3,11 +3,32 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const path = require('path'); // Move this up to the top imports
+
 const app = express();
 
 app.use(express.json());
 
-// 1. Session Setup
+// ==========================================
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG (MOVED UP)
+// ==========================================
+// Tell Express to look one folder up for the static public folder
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Clean login page route path
+app.get('/login-page', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
+});
+
+// Clean dashboard route path
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
+});
+
+
+// ==========================================
+// 2. SESSION & PASSPORT SETUP
+// ==========================================
 app.use(session({
     secret: 'thesis_secret_key_654321',
     resave: false,
@@ -17,21 +38,27 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Passport serialization
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
-// 2. Google Strategy Configuration (Fixed to use Render Environment Variables)
+
+// ==========================================
+// 3. GOOGLE OAUTH STRATEGY
+// ==========================================
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://thesis-attendance.onrender.com/auth/google/callback" 
+    callbackURL: "https://thesis-attendance-1.onrender.com/auth/google/callback" // Updated to match your active dashboard app domain name!
 },
 async (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
 }));
 
-// 3. Database Connection Path
+
+// ==========================================
+// 4. DATABASE CONNECTION
+// ==========================================
+// Keep your direct shard connection link right here
 const dbURI = "mongodb://Gaius:hyukkwonhyukkwon11@cluster0-shard-00-00.9em3kfg.mongodb.net:27017,cluster0-shard-00-01.9em3kfg.mongodb.net:27017,cluster0-shard-00-02.9em3kfg.mongodb.net:27017/attendance_db?ssl=true&replicaSet=atlas-135scz-shard-0&authSource=admin&retryWrites=true&w=majority";
 
 console.log("📡 Attempting Direct Shard Routing...");
@@ -42,7 +69,10 @@ mongoose.connect(dbURI, {
 .then(() => console.log("✅ SUCCESS: Database connected perfectly!"))
 .catch(err => console.error("❌ DATABASE FAILED:", err.message));
 
-// 4. AUTHENTICATION ROUTES
+
+// ==========================================
+// 5. AUTHENTICATION ENDPOINTS
+// ==========================================
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
 );
@@ -50,11 +80,14 @@ app.get('/auth/google',
 app.get('/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login-page' }),
     (req, res) => {
-        res.redirect('/login-page'); 
+        res.redirect('/dashboard'); // Change this to send successful users directly to the dashboard page instead of trapping them back on login!
     }
 );
 
-// 5. DATA ROUTES
+
+// ==========================================
+// 6. BACKEND DATA API ENDPOINTS
+// ==========================================
 app.get('/get-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -68,19 +101,10 @@ app.get('/get-attendance', async (req, res) => {
     }
 });
 
-const path = require('path');
 
-// Route to serve the login page smoothly
-app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Route to serve your dashboard smoothly
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// 6. DYNAMIC PORT BINDING (Fixed to prevent Render "Exited Early" crash)
+// ==========================================
+// 7. SERVER INITIALIZATION
+// ==========================================
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 SERVER ACTIVE & LIVE ON PORT: ${PORT}`);
