@@ -73,19 +73,26 @@ async (accessToken, refreshToken, profile, done) => {
 }));
 
 
-// ==========================================
-// 4. DATABASE CONNECTION
-// ==========================================
-const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:GaiusThesis2026@thesiscluster.9em3kfg.mongodb.net/?retryWrites=true&w=majority";
+// 4. CLEAR ALL RECORDS ROUTE: Fixes the dashboard clear button error
+app.delete('/clear-attendance', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ success: false, error: "Database offline." });
+        }
 
-console.log("📡 Attempting Database Connection...");
-mongoose.connect(dbURI, {
-    dbName: 'attendance_db', 
-    serverSelectionTimeoutMS: 15000,
-    family: 4 
-})
-.then(() => console.log("✅ SUCCESS: Database connected perfectly!"))
-.catch(err => console.error("❌ DATABASE FAILED:", err.message));
+        const db = mongoose.connection.useDb('attendance_db');
+        
+        // This permanently empties the entire attendances collection
+        await db.collection('attendances').deleteMany({});
+
+        console.log("🧹 Dashboard logs cleared by Chairperson.");
+        return res.json({ success: true, message: "All attendance records cleared successfully!" });
+
+    } catch (err) {
+        console.error("❌ Failed to clear logs:", err.message);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 
 // ==========================================
