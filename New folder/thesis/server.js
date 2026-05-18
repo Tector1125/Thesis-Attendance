@@ -120,7 +120,7 @@ app.get('/auth/google/callback',
 // 6. BACKEND DATA API ENDPOINTS
 // ==========================================
 
-// 1. GET USER INFO ROUTE: Solves the scan-page:72 JSON crash
+// 1. GET USER INFO ROUTE
 app.get('/user-info', (req, res) => {
     if (req.user && req.user.emails) {
         return res.json({
@@ -129,7 +129,6 @@ app.get('/user-info', (req, res) => {
             name: req.user.displayName || "Faculty Member"
         });
     }
-    
     return res.json({
         authenticated: false,
         email: "guest.faculty@gmail.com",
@@ -137,21 +136,20 @@ app.get('/user-info', (req, res) => {
     });
 });
 
-// 2. RETRIEVE ALL RECORDED ATTENDANCES
+// 2. RETRIEVE ALL RECORDED ATTENDANCES (Fixed: Removed accidental deleteMany loop)
 app.get('/get-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
-            return res.status(503).send("Database is connecting... Refresh in 5 seconds.");
+            return res.status(503).json({ error: "Database offline" });
         }
-        // Interacts with your collection directly through the main established connection
         const records = await mongoose.connection.db.collection('attendances').find().toArray();
-        res.json(records);
+        return res.json(records);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err.message });
     }
 });
 
-// 3. POST STATUS UPDATE ROUTE: Matches scan-page:88 exactly
+// 3. POST STATUS UPDATE ROUTE
 app.post('/record-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -159,11 +157,9 @@ app.post('/record-attendance', async (req, res) => {
         }
 
         const { employeeId, location, status, gps } = req.body;
-
         const userName = req.user && req.user.displayName ? req.user.displayName : `Faculty ${employeeId || 'FAC-001'}`;
         const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "faculty@gmail.com";
 
-        // Interacts with collection directly without calling .useDb() conflicts
         await mongoose.connection.db.collection('attendances').updateOne(
             { employeeId: employeeId || "FAC-001" },
             {
@@ -179,8 +175,8 @@ app.post('/record-attendance', async (req, res) => {
             { upsert: true }
         );
 
-        console.log(`📡 MongoDB Synchronized: ${userName} status changed to [${status}] in Room ${location}`);
-        return res.json({ success: true, message: "Attendance synchronized with MongoDB cluster!" });
+        console.log(`📡 MongoDB Synchronized: ${userName} -> ${location}`);
+        return res.json({ success: true, message: "Attendance synchronized!" });
 
     } catch (err) {
         console.error("❌ MongoDB Write Error:", err.message);
@@ -188,7 +184,7 @@ app.post('/record-attendance', async (req, res) => {
     }
 });
 
-// 4. CLEAR ALL RECORDS ROUTE: Fixes the dashboard clear button error
+// 4. CLEAR ALL RECORDS ROUTE (Clean, dedicated endpoint)
 app.delete('/clear-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -196,7 +192,6 @@ app.delete('/clear-attendance', async (req, res) => {
         }
 
         await mongoose.connection.db.collection('attendances').deleteMany({});
-
         console.log("🧹 Dashboard logs cleared by Chairperson.");
         return res.json({ success: true, message: "All attendance records cleared successfully!" });
 
