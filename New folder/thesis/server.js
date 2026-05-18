@@ -11,33 +11,37 @@ const app = express();
 app.use(express.json());
 
 // ==========================================
-// 1. FRONTEND STATIC FILE & ROUTING CONFIG
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG (ADAPTIVE PATHS)
 // ==========================================
-// Dahil nakita natin sa logs na nasa loob ng 'New folder/thesis' si Render, 
-// i-lock na natin directly sa local public folder para siguradong laging load ang login.html
-const publicPath = path.join(__dirname, 'public'); 
+let publicPath = path.join(__dirname, 'public');
+
+if (!fs.existsSync(path.join(publicPath, 'index.html'))) {
+    publicPath = path.join(__dirname, '..', 'public');
+}
 
 console.log(`📂 Static assets route locked onto: ${publicPath}`);
 
+// Serve static assets out of the verified public folder
 app.use(express.static(publicPath));
 
-// Login Page Route
-app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(publicPath, 'login.html'));
+// ROOT ROUTE: Serves your login layout explicitly
+app.get('/', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+// LOGIN PAGE ROUTE: Points to index.html where your code lives
+app.get('/login-page', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html')); 
+});
 
+// DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
-    // If a user is logged in, check their email right here too
-    if (req.user && req.user.emails && req.user.emails.length > 0) {
-        const userEmail = req.user.emails[0].value;
-        if (userEmail !== 'gerrysanchezjr1125@gmail.com') {
-            console.log(`⚠️ Unauthorized dashboard access attempt by ${userEmail}. Redirecting to scanner.`);
-            return res.redirect('/scan.html');
-        }
-    }
-    // If they are the chairperson or session isn't locked, let them view it
     res.sendFile(path.join(publicPath, 'dashboard.html'));
+});
+
+// SCANNER PAGE ROUTE
+app.get('/scan-page', (req, res) => {
+    res.sendFile(path.join(publicPath, 'scan.html')); // 👈 Ensures scan.html is served perfectly
 });
 
 
@@ -99,16 +103,14 @@ app.get('/auth/google/callback',
         // 1. Grab the email of the person who just logged in
         const userEmail = req.user.emails[0].value;
         
-        // 2. Identify your email vs. other faculty members
-        // Change this email string to match whichever account is the actual Chairperson
+
         if (userEmail === 'gerrysanchezjr1125@gmail.com') {
-            console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
-            res.redirect('/dashboard'); 
-        } else {
-            console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
-            // Sends all other faculty members straight to your QR scanner interface
-            res.redirect('/scan.html'); 
-        }
+          console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
+          res.redirect('/dashboard'); 
+      } else {
+          console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
+          res.redirect('/scan-page'); // 👈 Change this to a clean route endpoint
+      }
     }
 );
 
