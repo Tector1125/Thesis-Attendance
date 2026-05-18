@@ -56,12 +56,13 @@ async (accessToken, refreshToken, profile, done) => {
 
 
 // ==========================================
-// 4. DATABASE CONNECTION
+// 4. DATABASE CONNECTION (FIXED)
 // ==========================================
-// Keep your direct shard connection link right here
-const dbURI = "mongodb://Gaius:hyukkwonhyukkwon11@cluster0-shard-00-00.9em3kfg.mongodb.net:27017,cluster0-shard-00-01.9em3kfg.mongodb.net:27017,cluster0-shard-00-02.9em3kfg.mongodb.net:27017/attendance_db?ssl=true&replicaSet=atlas-135scz-shard-0&authSource=admin&retryWrites=true&w=majority";
 
-console.log("📡 Attempting Direct Shard Routing...");
+// Use the environment variable you set on Render, fallback to hardcoded link if local
+const dbURI = process.env.MONGODB_URI || "mongodb://Gaius:hyukkwonhyukkwon11@cluster0-shard-00-00.9em3kfg.mongodb.net:27017,cluster0-shard-00-01.9em3kfg.mongodb.net:27017,cluster0-shard-00-02.9em3kfg.mongodb.net:27017/attendance_db?ssl=true&replicaSet=atlas-135scz-shard-0&authSource=admin&retryWrites=true&w=majority";
+
+console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
     serverSelectionTimeoutMS: 15000,
     family: 4 
