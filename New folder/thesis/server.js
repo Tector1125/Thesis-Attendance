@@ -65,7 +65,7 @@ async (accessToken, refreshToken, profile, done) => {
 // 4. DATABASE CONNECTION (FIXED CLUSTER DOMAIN)
 // ==========================================
 // Inayos natin ang domain mula xxxx papuntang 9em3kfg para tumpak ang target cluster mo
-const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:gaiusgaius121102@thesiscluster.9em3kfg.mongodb.net/attendance_db?retryWrites=true&w=majority";
+const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:JFBRLKvDLyegT524@thesiscluster.9em3kfg.mongodb.net/attendance_db?retryWrites=true&w=majority";
 
 console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
