@@ -11,33 +11,36 @@ const app = express();
 app.use(express.json());
 
 // ==========================================
-// 1. FRONTEND STATIC FILE & ROUTING CONFIG (EXPLICIT RELATIVE PATHS)
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG (EXPLICIT SUBFOLDER PATHS)
 // ==========================================
+// This directs Express directly into the public/views layout structure
 const publicPath = path.join(__dirname, 'public');
+const viewsPath = path.join(__dirname, 'public', 'views');
 
 console.log(`📂 Static assets route locked onto: ${publicPath}`);
+console.log(`📄 HTML files route locked onto: ${viewsPath}`);
 
 // Serve static assets out of the verified public folder
 app.use(express.static(publicPath));
 
-// ROOT ROUTE: Serves your login layout explicitly from login.html
+// ROOT ROUTE: Serves your login layout explicitly from the views subfolder
 app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'login.html')); // 👈 Changed to login.html
+    res.sendFile(path.join(viewsPath, 'login.html'));
 });
 
 // LOGIN PAGE ROUTE: Points cleanly to login.html
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(publicPath, 'login.html')); // 👈 Changed to login.html
+    res.sendFile(path.join(viewsPath, 'login.html'));
 });
 
 // DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'dashboard.html'));
+    res.sendFile(path.join(viewsPath, 'dashboard.html'));
 });
 
 // SCANNER ROUTE
 app.get('/scan-page', (req, res) => {
-    res.sendFile(path.join(publicPath, 'scan.html'));
+    res.sendFile(path.join(viewsPath, 'scan.html'));
 });
 
 
@@ -49,7 +52,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
-
+git add public/login.html public/dashboard.html public/scan.html
 app.use(passport.initialize());
 app.use(passport.session());
 
