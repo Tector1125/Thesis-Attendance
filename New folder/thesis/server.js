@@ -115,6 +115,27 @@ app.get('/auth/google/callback',
 // ==========================================
 // 6. BACKEND DATA API ENDPOINTS
 // ==========================================
+
+// 1. GET USER INFO ROUTE: Solves the scan-page:72 JSON crash
+app.get('/user-info', (req, res) => {
+    // If the user is authenticated via Google Passport session
+    if (req.user && req.user.emails) {
+        return res.json({
+            authenticated: true,
+            email: req.user.emails[0].value,
+            name: req.user.displayName || "Faculty Member"
+        });
+    }
+    
+    // Fallback safe payload structure so the frontend script doesn't throw errors
+    return res.json({
+        authenticated: false,
+        email: "guest.faculty@gmail.com",
+        name: "Guest Faculty"
+    });
+});
+
+// 2. RETRIEVE ALL RECORDED ATTENDANCES
 app.get('/get-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -128,46 +149,43 @@ app.get('/get-attendance', async (req, res) => {
     }
 });
 
-// NEW ENDPOINT: Handles incoming room and status updates from scan.html
-app.post('/update-status', async (req, res) => {
+// 3. POST STATUS UPDATE ROUTE: Matches scan-page:88 exactly
+app.post('/record-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             return res.status(503).json({ success: false, error: "Database offline. Try again shortly." });
         }
 
-        const { room, status } = req.body;
+        // Destructure the data object your frontend is actively sending
+        const { employeeId, location, status, gps } = req.body;
 
-        // Validation block
-        if (!room || !status) {
-            return res.status(400).json({ success: false, error: "Missing required fields (room/status)." });
-        }
-
-        // Pulling session authentication identities safely
-        const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "test.faculty@gmail.com";
-        const userName = req.user && req.user.displayName ? req.user.displayName : "Faculty Member";
+        // Extract session name fallback safely if available
+        const userName = req.user && req.user.displayName ? req.user.displayName : `Faculty ${employeeId || 'FAC-001'}`;
+        const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "faculty@gmail.com";
 
         const db = mongoose.connection.useDb('attendance_db');
         
-        // Find existing record for this faculty member and update, or insert a new one if it doesn't exist (upsert)
+        // Update the document based on employeeId or insert a new record if it's unique
         await db.collection('attendances').updateOne(
-            { email: userEmail },
+            { employeeId: employeeId || "FAC-001" },
             {
                 $set: {
                     name: userName,
-                    room: room,
-                    status: status,
-                    lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-                    location: "Updated via Scanner"
+                    email: userEmail,
+                    room: location || "101", // Maps 'location' from frontend to your 'room' dataset
+                    status: status || "In Class",
+                    gps: gps || {},
+                    lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
                 }
             },
             { upsert: true }
         );
 
-        console.log(`📝 Successfully logged status for ${userEmail}: Room ${room} - ${status}`);
-        return res.json({ success: true, message: "Status synchronized with MongoDB!" });
+        console.log(`📡 MongoDB Synchronized: ${userName} status changed to [${status}] in Room ${location}`);
+        return res.json({ success: true, message: "Attendance synchronized with MongoDB cluster!" });
 
     } catch (err) {
-        console.error("❌ API ERROR in /update-status:", err.message);
+        console.error("❌ MongoDB Write Error:", err.message);
         return res.status(500).json({ success: false, error: err.message });
     }
 });
