@@ -13,7 +13,6 @@ app.use(express.json());
 // ==========================================
 // 1. FRONTEND STATIC FILE & ROUTING CONFIG (EXPLICIT RELATIVE PATHS)
 // ==========================================
-// This forces Express to look exactly inside the 'public' folder right next to server.js
 const publicPath = path.join(__dirname, 'public');
 
 console.log(`📂 Static assets route locked onto: ${publicPath}`);
@@ -21,14 +20,14 @@ console.log(`📂 Static assets route locked onto: ${publicPath}`);
 // Serve static assets out of the verified public folder
 app.use(express.static(publicPath));
 
-// ROOT ROUTE: Serves your login layout explicitly
+// ROOT ROUTE: Serves your login layout explicitly from login.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    res.sendFile(path.join(publicPath, 'login.html')); // 👈 Changed to login.html
 });
 
-// LOGIN PAGE ROUTE: Points to index.html where your code lives
+// LOGIN PAGE ROUTE: Points cleanly to login.html
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html')); 
+    res.sendFile(path.join(publicPath, 'login.html')); // 👈 Changed to login.html
 });
 
 // DASHBOARD ROUTE
