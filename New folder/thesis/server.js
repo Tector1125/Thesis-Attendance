@@ -86,16 +86,19 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login-page' }),
-    async (req, res) => {
-        // Example: Check the user's email string directly
+    (req, res) => {
+        // 1. Grab the email of the person who just logged in
         const userEmail = req.user.emails[0].value;
         
-        if (userEmail === 'gerrysanchezjr1125oumylux@gmail.com') {
-            // Redirect explicitly to an admin or specific dashboard route
-            res.redirect('/chairperson-dashboard');
+        // 2. Identify your email vs. other faculty members
+        // Change this email string to match whichever account is the actual Chairperson
+        if (userEmail === 'gerrysanchezjr1125@gmail.com') {
+            console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
+            res.redirect('/dashboard'); 
         } else {
-            // Send standard users somewhere else
-            res.redirect('/student-dashboard');
+            console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
+            // Sends all other faculty members straight to your QR scanner interface
+            res.redirect('/scan.html'); 
         }
     }
 );
