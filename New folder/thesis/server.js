@@ -3,26 +3,26 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const path = require('path'); // Move this up to the top imports
+const path = require('path');
 
 const app = express();
 
 app.use(express.json());
 
 // ==========================================
-// 1. FRONTEND STATIC FILE & ROUTING CONFIG (MOVED UP)
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG
 // ==========================================
-// Tell Express to look at the root-level public folder directly
-app.use(express.static(path.join(__dirname, 'public')));
+// process.cwd() ensures it looks at the absolute root level where the 'public' folder lives
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Fix the login route path
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(process.cwd(), 'public', 'login.html'));
 });
 
 // Fix the dashboard route path
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+    res.sendFile(path.join(process.cwd(), 'public', 'dashboard.html'));
 });
 
 
@@ -48,7 +48,7 @@ passport.deserializeUser((obj, done) => done(null, obj));
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://thesis-attendance-1.onrender.com/auth/google/callback" // Updated to match your active dashboard app domain name!
+    callbackURL: "https://thesis-attendance-1.onrender.com/auth/google/callback" 
 },
 async (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
@@ -56,11 +56,10 @@ async (accessToken, refreshToken, profile, done) => {
 
 
 // ==========================================
-// 4. DATABASE CONNECTION (FIXED)
+// 4. DATABASE CONNECTION
 // ==========================================
-
-// Use the environment variable you set on Render, fallback to hardcoded link if local
-const dbURI = process.env.MONGODB_URI || "mongodb://Gaius:hyukkwonhyukkwon11@cluster0-shard-00-00.9em3kfg.mongodb.net:27017,cluster0-shard-00-01.9em3kfg.mongodb.net:27017,cluster0-shard-00-02.9em3kfg.mongodb.net:27017/attendance_db?ssl=true&replicaSet=atlas-135scz-shard-0&authSource=admin&retryWrites=true&w=majority";
+// Prioritizes the environment variable from Render dashboard first
+const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:hyukkwonhyukkwon11@thesiscluster.xxxx.mongodb.net/attendance_db?retryWrites=true&w=majority";
 
 console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
@@ -81,7 +80,7 @@ app.get('/auth/google',
 app.get('/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login-page' }),
     (req, res) => {
-        res.redirect('/dashboard'); // Change this to send successful users directly to the dashboard page instead of trapping them back on login!
+        res.redirect('/dashboard'); 
     }
 );
 
