@@ -1,28 +1,24 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const session = require('express-session');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const path = require('path');
-
-const app = express();
-
-app.use(express.json());
-
 // ==========================================
-// 1. FRONTEND STATIC FILE & ROUTING CONFIG
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG (BULLETPROOF PATHS)
 // ==========================================
-// process.cwd() ensures it looks at the absolute root level where the 'public' folder lives
-app.use(express.static(path.join(process.cwd(), 'public')));
+
+// This dynamically determines if 'public' is next to server.js or one level up
+const publicPath = fs.existsSync(path.join(__dirname, 'public')) 
+    ? path.join(__dirname, 'public') 
+    : path.join(__dirname, '..', '..', 'public');
+
+console.log(`📂 Static assets route locked onto: ${publicPath}`);
+
+app.use(express.static(publicPath));
 
 // Fix the login route path
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public', 'login.html'));
+    res.sendFile(path.join(publicPath, 'login.html'));
 });
 
 // Fix the dashboard route path
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public', 'dashboard.html'));
+    res.sendFile(path.join(publicPath, 'dashboard.html'));
 });
 
 
