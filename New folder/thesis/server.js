@@ -13,35 +13,40 @@ app.use(express.json());
 // ==========================================
 // 1. FRONTEND STATIC FILE & ROUTING CONFIG (ADAPTIVE PATHS)
 // ==========================================
-let publicPath = path.join(__dirname, 'public');
+let baseProjectPath = __dirname;
 
-if (!fs.existsSync(path.join(publicPath, 'index.html'))) {
-    publicPath = path.join(__dirname, '..', 'public');
+// Fallback logic for the nested repository folder structure on Render
+if (!fs.existsSync(path.join(baseProjectPath, 'public'))) {
+    baseProjectPath = path.join(__dirname, '..');
 }
 
-console.log(`📂 Static assets route locked onto: ${publicPath}`);
+const publicPath = path.join(baseProjectPath, 'public');
+const viewsPath = path.join(baseProjectPath, 'public', 'views'); // 👈 Target our new subfolder
 
-// Serve static assets out of the verified public folder
+console.log(`📂 Static assets directory: ${publicPath}`);
+console.log(`📄 HTML Views directory: ${viewsPath}`);
+
+// Keep this to serve images/CSS styles if you use them
 app.use(express.static(publicPath));
 
-// ROOT ROUTE: Serves your login layout explicitly
+// ROOT ROUTE: Serves your login layout explicitly from the views folder
 app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    res.sendFile(path.join(viewsPath, 'index.html'));
 });
 
-// LOGIN PAGE ROUTE: Points to index.html where your code lives
+// LOGIN PAGE ROUTE: Points to the same index.html file
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html')); 
+    res.sendFile(path.join(viewsPath, 'index.html')); 
 });
 
 // DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'dashboard.html'));
+    res.sendFile(path.join(viewsPath, 'dashboard.html'));
 });
 
-// SCANNER PAGE ROUTE
+// SCANNER ROUTE
 app.get('/scan-page', (req, res) => {
-    res.sendFile(path.join(publicPath, 'scan.html')); // 👈 Ensures scan.html is served perfectly
+    res.sendFile(path.join(viewsPath, 'scan.html'));
 });
 
 
@@ -105,12 +110,12 @@ app.get('/auth/google/callback',
         
 
         if (userEmail === 'gerrysanchezjr1125@gmail.com') {
-          console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
-          res.redirect('/dashboard'); 
-      } else {
-          console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
-          res.redirect('/scan-page'); // 👈 Change this to a clean route endpoint
-      }
+    console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
+    res.redirect('/dashboard'); 
+} else {
+    console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
+    res.redirect('/scan-page'); // 👈 Updated to route cleanly
+}
     }
 );
 
