@@ -60,45 +60,22 @@ passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
 
-// 3. POST STATUS UPDATE ROUTE (With fallback for non-logged in testers)
-app.post('/record-attendance', async (req, res) => {
-    try {
-        if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ success: false, error: "Database offline. Try again shortly." });
-        }
+// ==========================================
+// 3. GOOGLE OAUTH STRATEGY
+// ==========================================
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn("⚠️ WARNING: Google OAuth environment variables are missing! Login will fail.");
+}
 
-        const { employeeId, location, status, gps } = req.body;
-
-        // 💡 ADVANCED FALLBACK: If req.user doesn't exist yet, allow it to use a placeholder so it doesn't crash on your phone!
-        const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "commute.tester@gmail.com";
-        const userName = req.user && req.user.displayName ? req.user.displayName : "Commute Test User";
-        const finalEmployeeId = employeeId || "FAC-TEST-001";
-
-        const db = mongoose.connection.useDb('attendance_db');
-        
-        await db.collection('attendances').updateOne(
-            { employeeId: finalEmployeeId },
-            {
-                $set: {
-                    name: userName,
-                    email: userEmail,
-                    room: location || "Not Specified", 
-                    status: status || "In Class",
-                    gps: gps || {},
-                    lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-                }
-            },
-            { upsert: true }
-        );
-
-        console.log(`📡 Commute Sync Success: ${userName} -> Room ${location} (${status})`);
-        return res.json({ success: true, message: "Attendance synchronized with MongoDB cluster!" });
-
-    } catch (err) {
-        console.error("❌ MongoDB Write Error:", err.message);
-        return res.status(500).json({ success: false, error: err.message });
-    }
-});
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID || "DUMMY_ID_FOR_COMPILATION",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "DUMMY_SECRET_FOR_COMPILATION",
+    callbackURL: "https://thesis-attendance-1.onrender.com/auth/google/callback",
+    proxy: true // 👈 CRITICAL: Tells Passport to trust Render's secure HTTPS proxy wrapper
+},
+async (accessToken, refreshToken, profile, done) => {
+    return done(null, profile);
+}));
 
 
 // 4. CLEAR ALL RECORDS ROUTE: Fixes the dashboard clear button error
