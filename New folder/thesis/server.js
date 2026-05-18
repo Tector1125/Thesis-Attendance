@@ -4,29 +4,29 @@ const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const path = require('path'); 
-const fs = require('fs'); // 👈 ADD THIS EXACT LINE HERE!
+const fs = require('fs'); 
 
 const app = express();
 
-// ==========================================
-// 1. FRONTEND STATIC FILE & ROUTING CONFIG (BULLETPROOF PATHS)
-// ==========================================
+app.use(express.json());
 
-// Step back exactly one level if public isn't directly inside the subfolder
-const publicPath = fs.existsSync(path.join(__dirname, 'public')) 
-    ? path.join(__dirname, 'public') 
-    : path.join(__dirname, '..', 'public'); 
+// ==========================================
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG
+// ==========================================
+// Dahil nakita natin sa logs na nasa loob ng 'New folder/thesis' si Render, 
+// i-lock na natin directly sa local public folder para siguradong laging load ang login.html
+const publicPath = path.join(__dirname, 'public'); 
 
 console.log(`📂 Static assets route locked onto: ${publicPath}`);
 
 app.use(express.static(publicPath));
 
-// Fix the login route path
+// Login Page Route
 app.get('/login-page', (req, res) => {
     res.sendFile(path.join(publicPath, 'login.html'));
 });
 
-// Fix the dashboard route path
+// Dashboard Route
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(publicPath, 'dashboard.html'));
 });
@@ -62,10 +62,10 @@ async (accessToken, refreshToken, profile, done) => {
 
 
 // ==========================================
-// 4. DATABASE CONNECTION
+// 4. DATABASE CONNECTION (FIXED CLUSTER DOMAIN)
 // ==========================================
-// Prioritizes the environment variable from Render dashboard first
-const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:hyukkwonhyukkwon11@thesiscluster.xxxx.mongodb.net/attendance_db?retryWrites=true&w=majority";
+// Inayos natin ang domain mula xxxx papuntang 9em3kfg para tumpak ang target cluster mo
+const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:gaiusgaius121102@thesiscluster.9em3kfg.mongodb.net/attendance_db?retryWrites=true&w=majority";
 
 console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
