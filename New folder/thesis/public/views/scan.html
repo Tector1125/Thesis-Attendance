@@ -60,48 +60,95 @@
         try {
             const res = await fetch('/user-info');
             const data = await res.json();
-            if (data.name && data.name !== "Unknown Faculty") {
+            
+            // Accept any name returned from our fallback or passport session
+            if (data.name) {
                 facultyName = data.name;
                 document.getElementById('welcomeUser').innerText = "Logged in as: " + facultyName;
                 document.getElementById('welcomeUser').style.color = "#28a745";
-            } else {
-                document.getElementById('welcomeUser').innerText = "Session Expired - Using Default ID";
-                document.getElementById('welcomeUser').style.color = "#dc3545";
             }
         } catch (err) {
             console.error("Auth check failed", err);
+            // Non-blocking fallback so you can still test it during your commute!
+            document.getElementById('welcomeUser').innerText = "Running in Tester Mode";
+            document.getElementById('welcomeUser').style.color = "#ffc107";
         }
     };
 
     async function getLocationAndSubmit() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (position) => {
-                const attendanceData = {
-                    employeeId: facultyName, // This uses the Google Name fetched on load
-                    location: document.getElementById('roomSelect').value,
-                    status: document.getElementById('status').value,
-                    gps: { lat: position.coords.latitude, lng: position.coords.longitude }
+                const userGPS = { 
+                    lat: position.coords.latitude, 
+                    lng: position.coords.longitude 
                 };
 
-                console.log("Sending to DB:", attendanceData);
+                // MATCHING PAYLOAD STRUCTURE WITH SERVER.JS
+                const attendanceData = {
+                    employeeId: facultyName === "FAC-001" ? "FAC-TEST-001" : facultyName,
+                    location: document.getElementById('roomSelect').value, // 🔗 Changed key from 'room' to 'location'
+                    status: document.getElementById('status').value,
+                    gps: userGPS 
+                };
 
-                const response = await fetch('/record-attendance', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(attendanceData)
-                });
+                console.log("Sending payload to DB:", attendanceData);
 
-                if (response.ok) {
-                    alert("Status Updated for " + facultyName);
-                    window.location.href = "/dashboard";
-                } else {
-                    alert("Update failed. Check VS Code Terminal.");
+                try {
+                    const response = await fetch('/record-attendance', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(attendanceData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        alert("✅ Status Updated Successfully!");
+                        window.location.href = "/dashboard";
+                    } else {
+                        alert("⚠️ Update failed: " + (result.error || "Server validation issue"));
+                    }
+                } catch (fetchErr) {
+                    console.error("Network communication failure:", fetchErr);
+                    alert("❌ Network Error: Could not reach the server.");
                 }
             }, (error) => {
-                alert("Location Error: Please turn on GPS.");
+                // If GPS is disabled or blocked on your mobile phone browser, use an empty object fallback
+                console.warn("GPS turned off or blocked. Proceeding with fallback.");
+                submitWithFallbackGPS({ lat: 0, lng: 0 });
             });
+        } else {
+            submitWithFallbackGPS({ lat: 0, lng: 0 });
         }
     }
-</script>
+
+    // Secondary sub-routine handler to submit updates even if phone location services are turned off
+    async function submitWithFallbackGPS(fallbackGPS) {
+        const attendanceData = {
+            employeeId: facultyName === "FAC-001" ? "FAC-TEST-001" : facultyName,
+            location: document.getElementById('roomSelect').value,
+            status: document.getElementById('status').value,
+            gps: fallbackGPS
+        };
+
+        try {
+            const response = await fetch('/record-attendance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(attendanceData)
+            });
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert("✅ Status Updated Successfully (No GPS Data)!");
+                window.location.href = "/dashboard";
+            } else {
+                alert("⚠️ Update failed: " + (result.error || "Server validation issue"));
+            }
+        } catch (err) {
+            alert("❌ Network Error: Could not sync updates.");
+        }
+    }
+    </script>
 </body>
 </html>
