@@ -11,42 +11,34 @@ const app = express();
 app.use(express.json());
 
 // ==========================================
-// 1. FRONTEND STATIC FILE & ROUTING CONFIG (ADAPTIVE PATHS)
+// 1. FRONTEND STATIC FILE & ROUTING CONFIG (EXPLICIT RELATIVE PATHS)
 // ==========================================
-let baseProjectPath = __dirname;
+// This forces Express to look exactly inside the 'public' folder right next to server.js
+const publicPath = path.join(__dirname, 'public');
 
-// Fallback logic for the nested repository folder structure on Render
-if (!fs.existsSync(path.join(baseProjectPath, 'public'))) {
-    baseProjectPath = path.join(__dirname, '..');
-}
+console.log(`📂 Static assets route locked onto: ${publicPath}`);
 
-const publicPath = path.join(baseProjectPath, 'public');
-const viewsPath = path.join(baseProjectPath, 'public', 'views'); // 👈 Target our new subfolder
-
-console.log(`📂 Static assets directory: ${publicPath}`);
-console.log(`📄 HTML Views directory: ${viewsPath}`);
-
-// Keep this to serve images/CSS styles if you use them
+// Serve static assets out of the verified public folder
 app.use(express.static(publicPath));
 
-// ROOT ROUTE: Serves your login layout explicitly from the views folder
+// ROOT ROUTE: Serves your login layout explicitly
 app.get('/', (req, res) => {
-    res.sendFile(path.join(viewsPath, 'index.html'));
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// LOGIN PAGE ROUTE: Points to the same index.html file
+// LOGIN PAGE ROUTE: Points to index.html where your code lives
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(viewsPath, 'index.html')); 
+    res.sendFile(path.join(publicPath, 'index.html')); 
 });
 
 // DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(viewsPath, 'dashboard.html'));
+    res.sendFile(path.join(publicPath, 'dashboard.html'));
 });
 
 // SCANNER ROUTE
 app.get('/scan-page', (req, res) => {
-    res.sendFile(path.join(viewsPath, 'scan.html'));
+    res.sendFile(path.join(publicPath, 'scan.html'));
 });
 
 
