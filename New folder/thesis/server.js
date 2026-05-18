@@ -128,48 +128,47 @@ app.get('/get-attendance', async (req, res) => {
     }
 });
 
-// 👈 ADD THIS NEW POST ROUTE RIGHT HERE:
+// NEW ENDPOINT: Handles incoming room and status updates from scan.html
 app.post('/update-status', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ error: "Database is offline. Try again shortly." });
+            return res.status(503).json({ success: false, error: "Database offline. Try again shortly." });
         }
 
-        // Grab data sent from scan.html front-end form
         const { room, status } = req.body;
-        
-        // Safety check to ensure data exists
+
+        // Validation block
         if (!room || !status) {
-            return res.status(400).json({ error: "Missing room or status values." });
+            return res.status(400).json({ success: false, error: "Missing required fields (room/status)." });
         }
 
-        // Fallback email identity if passport session is still building out
+        // Pulling session authentication identities safely
         const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "test.faculty@gmail.com";
         const userName = req.user && req.user.displayName ? req.user.displayName : "Faculty Member";
 
         const db = mongoose.connection.useDb('attendance_db');
         
-        // Update the record if it exists for this email, or create a new one (upsert)
+        // Find existing record for this faculty member and update, or insert a new one if it doesn't exist (upsert)
         await db.collection('attendances').updateOne(
             { email: userEmail },
-            { 
-                $set: { 
+            {
+                $set: {
                     name: userName,
-                    room: room, 
-                    status: status, 
-                    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    location: "Detected via Scanner"
-                } 
+                    room: room,
+                    status: status,
+                    lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    location: "Updated via Scanner"
+                }
             },
             { upsert: true }
         );
 
-        console.log(`📝 Status updated for ${userEmail}: Room ${room} - ${status}`);
-        res.json({ success: true, message: "Status updated successfully!" });
+        console.log(`📝 Successfully logged status for ${userEmail}: Room ${room} - ${status}`);
+        return res.json({ success: true, message: "Status synchronized with MongoDB!" });
 
     } catch (err) {
-        console.error("❌ Status Update Failed:", err.message);
-        res.status(500).json({ error: err.message });
+        console.error("❌ API ERROR in /update-status:", err.message);
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 
