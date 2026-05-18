@@ -185,7 +185,8 @@ app.post('/record-attendance', async (req, res) => {
 });
 
 // 4. CLEAR ALL RECORDS ROUTE (Clean, dedicated endpoint)
-app.delete('/clear-attendance', async (req, res) => {
+// Change 'app.delete' to 'app.post' so it catches the frontend request perfectly!
+app.post('/clear-attendance', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             return res.status(503).json({ success: false, error: "Database offline." });
