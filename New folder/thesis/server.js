@@ -60,17 +60,45 @@ passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
 
-// ==========================================
-// 3. GOOGLE OAUTH STRATEGY
-// ==========================================
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://thesis-attendance-1.onrender.com/auth/google/callback" 
-},
-async (accessToken, refreshToken, profile, done) => {
-    return done(null, profile);
-}));
+// 3. POST STATUS UPDATE ROUTE (With fallback for non-logged in testers)
+app.post('/record-attendance', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ success: false, error: "Database offline. Try again shortly." });
+        }
+
+        const { employeeId, location, status, gps } = req.body;
+
+        // 💡 ADVANCED FALLBACK: If req.user doesn't exist yet, allow it to use a placeholder so it doesn't crash on your phone!
+        const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "commute.tester@gmail.com";
+        const userName = req.user && req.user.displayName ? req.user.displayName : "Commute Test User";
+        const finalEmployeeId = employeeId || "FAC-TEST-001";
+
+        const db = mongoose.connection.useDb('attendance_db');
+        
+        await db.collection('attendances').updateOne(
+            { employeeId: finalEmployeeId },
+            {
+                $set: {
+                    name: userName,
+                    email: userEmail,
+                    room: location || "Not Specified", 
+                    status: status || "In Class",
+                    gps: gps || {},
+                    lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+                }
+            },
+            { upsert: true }
+        );
+
+        console.log(`📡 Commute Sync Success: ${userName} -> Room ${location} (${status})`);
+        return res.json({ success: true, message: "Attendance synchronized with MongoDB cluster!" });
+
+    } catch (err) {
+        console.error("❌ MongoDB Write Error:", err.message);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 
 // 4. CLEAR ALL RECORDS ROUTE: Fixes the dashboard clear button error
