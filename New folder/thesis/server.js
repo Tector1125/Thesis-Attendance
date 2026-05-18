@@ -52,7 +52,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
-git add public/login.html public/dashboard.html public/scan.html
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -76,12 +76,11 @@ async (accessToken, refreshToken, profile, done) => {
 // ==========================================
 // 4. DATABASE CONNECTION
 // ==========================================
-// We point directly to the base cluster, allowing Mongoose to handle the 'attendance_db' context dynamically
 const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:GaiusThesis2026@thesiscluster.9em3kfg.mongodb.net/?retryWrites=true&w=majority";
 
 console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
-    dbName: 'attendance_db', // 👈 Forces Mongoose to establish and name the database context explicitly here
+    dbName: 'attendance_db', 
     serverSelectionTimeoutMS: 15000,
     family: 4 
 })
@@ -102,14 +101,13 @@ app.get('/auth/google/callback',
         // 1. Grab the email of the person who just logged in
         const userEmail = req.user.emails[0].value;
         
-
         if (userEmail === 'gerrysanchezjr1125@gmail.com') {
-    console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
-    res.redirect('/dashboard'); 
-} else {
-    console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
-    res.redirect('/scan-page'); // 👈 Updated to route cleanly
-}
+            console.log(`👑 Chairperson Detected: ${userEmail}. Routing to Monitor.`);
+            res.redirect('/dashboard'); 
+        } else {
+            console.log(`📋 Standard Faculty Detected: ${userEmail}. Routing to Scanner.`);
+            res.redirect('/scan-page'); 
+        }
     }
 );
 
