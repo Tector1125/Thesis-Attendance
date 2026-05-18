@@ -1,11 +1,21 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const path = require('path'); 
+const fs = require('fs'); // 👈 ADD THIS EXACT LINE HERE!
+
+const app = express();
+
 // ==========================================
 // 1. FRONTEND STATIC FILE & ROUTING CONFIG (BULLETPROOF PATHS)
 // ==========================================
 
-// This dynamically determines if 'public' is next to server.js or one level up
+// Step back exactly one level if public isn't directly inside the subfolder
 const publicPath = fs.existsSync(path.join(__dirname, 'public')) 
     ? path.join(__dirname, 'public') 
-    : path.join(__dirname, '..', '..', 'public');
+    : path.join(__dirname, '..', 'public'); 
 
 console.log(`📂 Static assets route locked onto: ${publicPath}`);
 
