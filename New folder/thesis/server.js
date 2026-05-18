@@ -128,6 +128,51 @@ app.get('/get-attendance', async (req, res) => {
     }
 });
 
+// 👈 ADD THIS NEW POST ROUTE RIGHT HERE:
+app.post('/update-status', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ error: "Database is offline. Try again shortly." });
+        }
+
+        // Grab data sent from scan.html front-end form
+        const { room, status } = req.body;
+        
+        // Safety check to ensure data exists
+        if (!room || !status) {
+            return res.status(400).json({ error: "Missing room or status values." });
+        }
+
+        // Fallback email identity if passport session is still building out
+        const userEmail = req.user && req.user.emails ? req.user.emails[0].value : "test.faculty@gmail.com";
+        const userName = req.user && req.user.displayName ? req.user.displayName : "Faculty Member";
+
+        const db = mongoose.connection.useDb('attendance_db');
+        
+        // Update the record if it exists for this email, or create a new one (upsert)
+        await db.collection('attendances').updateOne(
+            { email: userEmail },
+            { 
+                $set: { 
+                    name: userName,
+                    room: room, 
+                    status: status, 
+                    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    location: "Detected via Scanner"
+                } 
+            },
+            { upsert: true }
+        );
+
+        console.log(`📝 Status updated for ${userEmail}: Room ${room} - ${status}`);
+        res.json({ success: true, message: "Status updated successfully!" });
+
+    } catch (err) {
+        console.error("❌ Status Update Failed:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 // ==========================================
 // 7. SERVER INITIALIZATION
