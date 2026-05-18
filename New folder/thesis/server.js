@@ -65,7 +65,7 @@ async (accessToken, refreshToken, profile, done) => {
 // 4. DATABASE CONNECTION
 // ==========================================
 // We point directly to the base cluster, allowing Mongoose to handle the 'attendance_db' context dynamically
-const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:JFBRLKvDLyegT524@thesiscluster.9em3kfg.mongodb.net/?retryWrites=true&w=majority";
+const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:GaiusThesis2026@thesiscluster.9em3kfg.mongodb.net/?retryWrites=true&w=majority";
 
 console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
@@ -86,8 +86,17 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login-page' }),
-    (req, res) => {
-        res.redirect('/dashboard'); 
+    async (req, res) => {
+        // Example: Check the user's email string directly
+        const userEmail = req.user.emails[0].value;
+        
+        if (userEmail === 'gerrysanchezjr1125oumylux@gmail.com') {
+            // Redirect explicitly to an admin or specific dashboard route
+            res.redirect('/chairperson-dashboard');
+        } else {
+            // Send standard users somewhere else
+            res.redirect('/student-dashboard');
+        }
     }
 );
 
