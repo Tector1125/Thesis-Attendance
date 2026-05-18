@@ -26,8 +26,17 @@ app.get('/login-page', (req, res) => {
     res.sendFile(path.join(publicPath, 'login.html'));
 });
 
-// Dashboard Route
+
 app.get('/dashboard', (req, res) => {
+    // If a user is logged in, check their email right here too
+    if (req.user && req.user.emails && req.user.emails.length > 0) {
+        const userEmail = req.user.emails[0].value;
+        if (userEmail !== 'gerrysanchezjr1125@gmail.com') {
+            console.log(`⚠️ Unauthorized dashboard access attempt by ${userEmail}. Redirecting to scanner.`);
+            return res.redirect('/scan.html');
+        }
+    }
+    // If they are the chairperson or session isn't locked, let them view it
     res.sendFile(path.join(publicPath, 'dashboard.html'));
 });
 
