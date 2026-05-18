@@ -12,17 +12,17 @@ app.use(express.json());
 // ==========================================
 // 1. FRONTEND STATIC FILE & ROUTING CONFIG (MOVED UP)
 // ==========================================
-// Tell Express to look one folder up for the static public folder
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Tell Express to look at the root-level public folder directly
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Clean login page route path
+// Fix the login route path
 app.get('/login-page', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Clean dashboard route path
+// Fix the dashboard route path
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 
