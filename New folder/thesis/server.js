@@ -62,13 +62,14 @@ async (accessToken, refreshToken, profile, done) => {
 
 
 // ==========================================
-// 4. DATABASE CONNECTION (FIXED CLUSTER DOMAIN)
+// 4. DATABASE CONNECTION
 // ==========================================
-// Inayos natin ang domain mula xxxx papuntang 9em3kfg para tumpak ang target cluster mo
-const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:JFBRLKvDLyegT524@cluster0.9em3kfg.mongodb.net/?appName=Cluster0";
+// We point directly to the base cluster, allowing Mongoose to handle the 'attendance_db' context dynamically
+const dbURI = process.env.MONGODB_URI || "mongodb+srv://Gaius:JFBRLKvDLyegT524@thesiscluster.9em3kfg.mongodb.net/?retryWrites=true&w=majority";
 
 console.log("📡 Attempting Database Connection...");
 mongoose.connect(dbURI, {
+    dbName: 'attendance_db', // 👈 Forces Mongoose to establish and name the database context explicitly here
     serverSelectionTimeoutMS: 15000,
     family: 4 
 })
